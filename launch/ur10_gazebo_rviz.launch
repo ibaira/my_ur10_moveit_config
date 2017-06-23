@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<!--
+  task constrained motion planning for Universal robot ur10 launch.
+
+  Usage:
+    rosrun ur10_gazebo_rviz.launch robot_ip:=<value>
+    edit: Ismael Baira Ojeda iboj@elektro.dtu.dk
+-->
+
+<launch>    
+    <arg name="odom_frame_id"   default="odom"/>
+    <arg name="base_frame_id"   default="base_link"/>
+    <arg name="global_frame_id" default="world"/>
+
+    <!-- By default, we do not start a database (it can be large) -->
+    <arg name="db" default="false" />
+    <!-- By default, we are not in debug mode -->
+    <arg name="debug" default="false" />    
+    <arg name="gui" default="true" />
+    <param name="use_gui" value="$(arg gui)"/>
+    
+<!--      Load real robot model  
+    <include file="$(find ur_modern_driver)/launch/ur10_bringup.launch">
+    <arg name="robot_ip" default="192.38.66.227" />
+    <arg name="limited" default="false" />
+    </include>  -->
+
+    <arg name="limited" default="false"/>
+    <arg name="paused" default="true"/>
+    <!-- <arg name="paused" value="true"/> -->
+
+    <!-- Launch ur10 in gazebo using the launch file from ur_gazebo -->
+    <!-- <include file="$(find ur_gazebo)/launch/ur10.launch"/> -->
+    <!-- <include file="$(find my_ur10_moveit_config)/launch/ur10.launch"/> -->
+
+    <include file="$(find my_ur10_moveit_config)/launch/ur10.launch">
+      <arg name="limited" value="$(arg limited)"/>
+      <arg name="paused" value="$(arg paused)"/>
+    </include>
+
+    <include file="$(find my_ur10_moveit_config)/launch/ur10_moveit_planning_execution.launch">
+      <arg name="sim" value="true"/>
+    </include>
+
+
+    <!-- Set the param that trajectory_execution_manager needs to find the controller plugin -->
+    <!--     <arg name="moveit_controller_manager" default="moveit_simple_controller_manager/MoveItSimpleControllerManager" />
+    <param name="moveit_controller_manager" value="$(arg moveit_controller_manager)"/> -->
+    <!-- load controller_list
+    rosparam file="$(find my_ur10_moveit_config)/config/controllers.yaml"/> -->
+   
+    <!-- We do not have a robot connected, so publish fake joint states -->
+    <!-- <rosparam command="load" file="$(find my_ur10_limited)/config/joint_zeros.yaml" />     -->
+<!--     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+      <param name="/use_gui" value="false"/>
+      <rosparam param="/source_list">[/move_group/fake_controller_joint_states]</rosparam>
+    </node> -->
+<!--     <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+      <param name="/use_gui" value="false"/>
+      <rosparam param="/source_list">[/move_group/MoveGroupCartesianPathService]</rosparam>
+    </node> -->
+
+    <!-- Given the published joint states, publish tf for the robot links -->
+    
+    <!-- Avoid conflict with node from gazebo launch -->
+    <!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" /> -->
+
+    <!-- Run the main MoveIt executable without trajectory execution (we do not have controllers configured by default) -->
+<!--     <include file="$(find my_ur10_limited)/launch/move_group.launch">
+      <arg name="allow_trajectory_execution" value="true"/>  
+      <arg name="fake_execution" value="true"/>
+      <arg name="info" value="true"/>
+      <arg name="debug" value="$(arg debug)"/>
+    </include>   -->
+
+
+
+
+    <!-- Run Rviz and load the default config to see the state of the move_group node-->
+    <include file="$(find my_ur10_moveit_config)/launch/moveit_rviz.launch">
+      <arg name="config" value="true"/>
+      <arg name="debug" value="$(arg debug)"/>
+    </include>     
+
+    <!-- <node name="infinite_tray" pkg="my_ur10_moveit_config" type="infinite_tray.py" output="screen"/> -->
+
+</launch>
